@@ -1,3 +1,4 @@
+// Handler scope is to validate data, receive respond and returning response
 const ClientError = require("../../exceptions/ClientError");
 
 class NotesHandler {
@@ -12,14 +13,14 @@ class NotesHandler {
     this.deleteNoteByIdHandler = this.deleteNoteByIdHandler.bind(this);
   }
 
-  postNoteHandler (request, h) {
+  async postNoteHandler (request, h) {
     try {
       // Parse payload
       this._validator.validateNotePayload(request.payload);
       const { title = 'untitled', body, tags } = request.payload;
   
       // Pass data to noteService
-      const noteId = this._service.addNote({ title, body, tags });
+      const noteId = await this._service.addNote({ title, body, tags });
   
       // Initialized response
       const response = h.response({
@@ -56,8 +57,12 @@ class NotesHandler {
     }
   }
 
-  getNotesHandler() {
-    const notes = this._service.getNotes();
+  async getNotesHandler() {
+    const notes = await this._service.getNotes();
+    // no need to modified respone header because respond code is using
+    // default data (TIL 200 is default when you return a response)
+    // other method need response to be 'destructured' before send to user because 
+    // response code need to be altered.
     return {
       status: 'success',
       data: {
@@ -67,10 +72,10 @@ class NotesHandler {
 
   }
 
-  getNoteByIdHandler(request, h){
+  async getNoteByIdHandler(request, h){
     try {
       const { id } = request.params;
-      const note = this._service.getNoteById(id);
+      const note = await this._service.getNoteById(id);
       return {
         status: 'success',
         data: {
@@ -97,12 +102,12 @@ class NotesHandler {
 
   }
 
-  putNoteByIdHandler(request, h) {
+  async putNoteByIdHandler(request, h) {
     try {
       this._validator.validateNotePayload(request.payload);
       const { id } = request.params;
   
-      this._service.editNoteById(id, request.payload);
+      await this._service.editNoteById(id, request.payload);
       return {
         status: 'success',
         message: 'Catatan berhasil diperbarui',
@@ -126,10 +131,10 @@ class NotesHandler {
     }
   }
 
-  deleteNoteByIdHandler(request, h) {
+  async deleteNoteByIdHandler(request, h) {
     try {
       const { id } = request.params;
-      this._service.deleteNoteById(id);
+      await this._service.deleteNoteById(id);
       return {
         status: 'success',
         message: 'Catatan berhasil dihapus',
