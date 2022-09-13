@@ -1,9 +1,10 @@
+// Entry point for hapi plugin
 const NotesHandler = require("./handler");
 const routes = require('./routes')
 
 module.exports = {
-  name: 'notes',
-  version: '1.0.0',
+  name: 'notes', // metadata
+  version: '1.0.0', // metadata
   register: async (server, { service, validator }) => {
     const notesHandler = new NotesHandler(service, validator);
     server.route(routes(notesHandler));

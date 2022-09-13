@@ -15,7 +15,7 @@ class NotesHandler {
 
   async postNoteHandler (request, h) {
     try {
-      // Parse payload
+      // Parse incoming payload (payload = body)
       this._validator.validateNotePayload(request.payload);
       const { title = 'untitled', body, tags } = request.payload;
   
@@ -74,15 +74,21 @@ class NotesHandler {
 
   async getNoteByIdHandler(request, h){
     try {
+      // parse incoming parameter (param = url)
       const { id } = request.params;
+
+      // pass to NotesService
       const note = await this._service.getNoteById(id);
+
+      // Return success
       return {
         status: 'success',
         data: {
           note,
         },
       };
-    } catch (error) {
+    } catch (error) { // Return fail
+      // Fail bad request
       if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
@@ -91,6 +97,8 @@ class NotesHandler {
         response.code(error.statusCode);
         return response;
       }
+
+      // fail server errror
       const response = h.response({
         status: 'eror',
         message: 'Maaf, terjadi kegagalan pada server kami.'
