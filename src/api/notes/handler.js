@@ -18,9 +18,10 @@ class NotesHandler {
       // Parse incoming payload (payload = body)
       this._validator.validateNotePayload(request.payload);
       const { title = 'untitled', body, tags } = request.payload;
+      const { id: credentialId } = request.auth.credentials;
   
       // Pass data to noteService
-      const noteId = await this._service.addNote({ title, body, tags });
+      const noteId = await this._service.addNote({ title, body, tags, owner: credentialId });
   
       // Initialized response
       const response = h.response({
@@ -57,8 +58,11 @@ class NotesHandler {
     }
   }
 
-  async getNotesHandler() {
-    const notes = await this._service.getNotes();
+  async getNotesHandler(request) {
+    // get id from auth
+    const { id: credentialId } = request.auth.credentials;
+
+    const notes = await this._service.getNotes(credentialId);
     // no need to modified respone header because respond code is using
     // default data (TIL 200 is default when you return a response)
     // other method need response to be 'destructured' before send to user because 
@@ -76,6 +80,12 @@ class NotesHandler {
     try {
       // parse incoming parameter (param = url)
       const { id } = request.params;
+
+      // get credentials from request auth object
+      const { id: credentialId } = request.auth.credentials;
+
+      // validate if current user is owner of current note
+      await this._service.verifyNoteOwner(id, credentialId);
 
       // pass to NotesService
       const note = await this._service.getNoteById(id);
@@ -114,7 +124,9 @@ class NotesHandler {
     try {
       this._validator.validateNotePayload(request.payload);
       const { id } = request.params;
-  
+      const { id: credentialId } = request.auth.credentials;
+    
+      await this._service.verifyNoteOwner(id, credentialId)
       await this._service.editNoteById(id, request.payload);
       return {
         status: 'success',
@@ -142,6 +154,9 @@ class NotesHandler {
   async deleteNoteByIdHandler(request, h) {
     try {
       const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
+
+      await this._service.verifyNoteOwner(id, credentialId);
       await this._service.deleteNoteById(id);
       return {
         status: 'success',
