@@ -2,6 +2,7 @@ const ClientError = require("../../exceptions/ClientError");
 
 class AuthenticationHandler {
   constructor(authenticationsService, usersService, tokenManager, validator) {
+    // change 'scope' of passed function/class from server to be used in this file scope
     this._authenticationsService = authenticationsService;
     this._usersService = usersService;
     this._tokenManager = tokenManager;

@@ -8,6 +8,7 @@ class UsersHandler {
     // binding
     this.postUserHandler = this.postUserHandler.bind(this);
     this.getUserByIdHandler = this.getUserByIdHandler.bind(this);
+    this.getUsersByUsernameHandler = this.getUsersByUsernameHandler.bind(this);
   }
 
   async postUserHandler(request, h) {
@@ -19,8 +20,8 @@ class UsersHandler {
       const { username, password, fullname } = request.payload;
 
       // call service, passing data, expect return: userId
-      const userId = await this._service.addUser({ 
-        username, password, fullname 
+      const userId = await this._service.addUser({
+        username, password, fullname
       })
 
       const response = h.response({
@@ -70,7 +71,7 @@ class UsersHandler {
         },
       };
 
-    } catch (error){
+    } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
@@ -81,7 +82,38 @@ class UsersHandler {
       }
       // server error
       const response = h.response({
-        status:'error',
+        status: 'error',
+        message: 'Maaf, terjadi kegagalan pada server kami.',
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
+  }
+
+  async getUsersByUsernameHandler(request, h) {
+    try {
+      const { username = '' } = request.query;
+      const users = await this._service.getUsersByUsername(username);
+      return {
+        status: 'success',
+        data: {
+          users,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: 'fail',
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
+
+      // Server ERROR!
+      const response = h.response({
+        status: 'error',
         message: 'Maaf, terjadi kegagalan pada server kami.',
       });
       response.code(500);

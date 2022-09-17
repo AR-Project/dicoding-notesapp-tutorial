@@ -1,5 +1,8 @@
 // Handler scope is to validate data, receive respond and returning response
 const ClientError = require("../../exceptions/ClientError");
+// the reason why notes service is not imported here because, NoteService is Object 
+// being init and used via server.js FIRST,
+
 
 class NotesHandler {
   constructor(service, validator) {
@@ -80,14 +83,10 @@ class NotesHandler {
     try {
       // parse incoming parameter (param = url)
       const { id } = request.params;
-
-      // get credentials from request auth object
       const { id: credentialId } = request.auth.credentials;
 
       // validate if current user is owner of current note
-      await this._service.verifyNoteOwner(id, credentialId);
-
-      // pass to NotesService
+      await this._service.verifyNoteAccess(id, credentialId);
       const note = await this._service.getNoteById(id);
 
       // Return success
@@ -126,7 +125,7 @@ class NotesHandler {
       const { id } = request.params;
       const { id: credentialId } = request.auth.credentials;
     
-      await this._service.verifyNoteOwner(id, credentialId)
+      await this._service.verifyNoteAccess(id, credentialId)
       await this._service.editNoteById(id, request.payload);
       return {
         status: 'success',

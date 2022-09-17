@@ -4,6 +4,7 @@ const routes = (handler) => [
     path: '/authentications',
     handler: handler.postAuthenticationHandler,
   },
+  // method PUT used for refreshtoken,
   {
     method: 'PUT',
     path: '/authentications',

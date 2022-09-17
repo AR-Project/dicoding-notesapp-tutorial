@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
+// alter existing tables
 
 // exports.shorthands = undefined;
 
 exports.up = pgm => {
-  // membuat user baru.
+  // membuat SATU user baru, koneksi ke notes lama yang tidak punya pemilik.
   pgm.sql("INSERT INTO users(id, username, password, fullname) VALUES ('old_notes', 'old_notes', 'old_notes', 'old notes')");
  
   // mengubah nilai owner pada note yang owner-nya bernilai NULL

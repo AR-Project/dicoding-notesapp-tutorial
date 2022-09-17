@@ -6,8 +6,9 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const { mapDBtoModel } = require("../utils");
 
 class NotesService {
-  constructor() {
+  constructor(collaborationService) { // refer to server.js, collaborationService came from there
     this._pool = new Pool();
+    this._collaborationService = collaborationService;
   }
 
   async addNote({ title, body, tags, owner }) {
@@ -37,7 +38,10 @@ class NotesService {
   async getNotes(owner) {
     // prep query
     const query = {
-      text: 'SELECT * FROM notes WHERE owner = $1',
+      text: `SELECT notes.* FROM notes
+      LEFT JOIN collaborations ON collaborations.note_id = notes.id
+      WHERE notes.owner = $1 OR collaborations.user_id = $1
+      GROUP BY notes.id`,
       values: [owner]
     }
 
@@ -51,7 +55,11 @@ class NotesService {
   async getNoteById(id) {
     // init query data using id
     const query = {
-      text: 'SELECT * FROM notes WHERE id = $1',
+      // text: 'SELECT * FROM notes WHERE id = $1',
+      text: `SELECT notes.*, users.username
+      FROM notes
+      LEFT JOIN users ON users.id = notes.owner
+      WHERE notes.id = $1`,
       values: [id],
     };
 
@@ -124,6 +132,35 @@ class NotesService {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
 
+  }
+
+  async verifyNoteAccess(noteId, userId) {
+    // what this function receieve, specific noteID and User ID
+    // Summary: check if those two value has some correlation
+    try {
+      // check is current user has ownership of notes
+      await this.verifyNoteOwner(noteId, userId);
+      // possible error: notfound or authorization error
+      // if this not throw error means notesId is exist AND current userId IS
+      // the real OWNER of current notesID
+
+    } catch (error) {
+      // if code reaching here means: there error of those possible error,
+      // ONLY if the error are not found, the app right away throw the error
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      
+      // if not NotFoundError, means current noteID is exist BUT userID who trying
+      // to access it was NOT OWNER. 
+      try {
+        // so it called verify collaborator in collaborationService
+        await this._collaborationService.verifyCollaborator(noteId, userId);
+      } catch {
+        throw error;
+      }
+
+    }
   }
 }
 

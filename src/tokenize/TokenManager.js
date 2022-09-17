@@ -6,7 +6,7 @@ const TokenManager = {
   generateRefreshToken: (payload) => Jwt.token.generate(payload, process.env.REFRESH_TOKEN_KEY),
   verifyRefreshToken: (refreshToken) => {
     try {
-      // verifySignature method only accept artifact that has beed decoded
+      // verifySignature method only accept artifact that has beed decoded?
       const artifacts = Jwt.token.decode(refreshToken);
       Jwt.token.verifySignature(artifacts, process.env.REFRESH_TOKEN_KEY);
 
