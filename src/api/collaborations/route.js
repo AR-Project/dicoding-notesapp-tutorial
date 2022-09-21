@@ -13,8 +13,8 @@ const routes = (handler) => [
     handler: handler.deleteCollaborationHandler,
     options: {
       auth: 'notesapp_jwt',
-    }
-  }
+    },
+  },
 ];
 
 module.exports = routes;

@@ -4,7 +4,7 @@ const {
   DeleteAuthenticationPayloadSchema,
 } = require('./schema');
 const InvariantError = require('../../exceptions/InvariantError');
- 
+
 const AuthenticationsValidator = {
   validatePostAuthenticationPayload: (payload) => {
     // refer to validator schema
@@ -28,5 +28,5 @@ const AuthenticationsValidator = {
     }
   },
 };
- 
+
 module.exports = AuthenticationsValidator;

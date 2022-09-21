@@ -1,9 +1,9 @@
-const { nanoid } = require("nanoid");
-const { Pool } = require("pg");
-const InvariantError = require("../../exceptions/InvariantError");
+const { nanoid } = require('nanoid');
+const { Pool } = require('pg');
+const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
-const { mapDBtoModel } = require("../utils");
+const { mapDBtoModel } = require('../utils');
 
 class NotesService {
   constructor(collaborationService) { // refer to server.js, collaborationService came from there
@@ -11,7 +11,9 @@ class NotesService {
     this._collaborationService = collaborationService;
   }
 
-  async addNote({ title, body, tags, owner }) {
+  async addNote({
+    title, body, tags, owner,
+  }) {
     // initialize metadata for a new note
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
@@ -27,8 +29,8 @@ class NotesService {
     const result = await this._pool.query(query);
 
     // check if successfully inserted
-    if (!result.rows[0].id){
-      throw new InvariantError('Catatan gagal ditambahkan')
+    if (!result.rows[0].id) {
+      throw new InvariantError('Catatan gagal ditambahkan');
     }
 
     // return id
@@ -42,8 +44,8 @@ class NotesService {
       LEFT JOIN collaborations ON collaborations.note_id = notes.id
       WHERE notes.owner = $1 OR collaborations.user_id = $1
       GROUP BY notes.id`,
-      values: [owner]
-    }
+      values: [owner],
+    };
 
     // fetch data from db
     const result = await this._pool.query(query);
@@ -68,22 +70,22 @@ class NotesService {
 
     // result validation
     if (!result.rows.length) {
-      throw new NotFoundError('Catatan tidak ditemukan')
+      throw new NotFoundError('Catatan tidak ditemukan');
     }
 
     // return result
     return result.rows.map(mapDBtoModel)[0];
   }
 
-  async editNoteById( id, { title, body, tags }) {
+  async editNoteById(id, { title, body, tags }) {
     // init new date
     const updatedAt = new Date().toISOString();
-    
+
     // prepare query
     const query = {
       text: 'UPDATE notes SET title = $1, body = $2, tags = $3, update_at = $4 WHERE id = $5 RETURNING id',
-      values: [ title, body, tags, updatedAt, id]
-    }
+      values: [title, body, tags, updatedAt, id],
+    };
 
     // run query
     const result = await this._pool.query(query);
@@ -94,19 +96,19 @@ class NotesService {
     }
   }
 
-  async deleteNoteById (id) {
-    // prepare query 
+  async deleteNoteById(id) {
+    // prepare query
     const query = {
       text: 'DELETE FROM notes WHERE id = $1 RETURNING id',
       values: [id],
-    }
+    };
 
     // run query
     const result = await this._pool.query(query);
 
     // validate result
     if (!result.rows.length) {
-      throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan')
+      throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
     }
   }
 
@@ -114,8 +116,8 @@ class NotesService {
     // prep query
     const query = {
       text: 'SELECT * FROM notes WHERE id = $1',
-      values: [id]
-    }
+      values: [id],
+    };
 
     // run query
     const result = await this._pool.query(query);
@@ -124,14 +126,13 @@ class NotesService {
     if (!result.rows.length) {
       throw new NotFoundError('Catatan tidak ditemukan');
     }
-    
+
     // take the first note
     const note = result.rows[0];
 
-    if (note.owner !== owner){
+    if (note.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
-
   }
 
   async verifyNoteAccess(noteId, userId) {
@@ -143,23 +144,21 @@ class NotesService {
       // possible error: notfound or authorization error
       // if this not throw error means notesId is exist AND current userId IS
       // the real OWNER of current notesID
-
     } catch (error) {
       // if code reaching here means: there error of those possible error,
       // ONLY if the error are not found, the app right away throw the error
       if (error instanceof NotFoundError) {
         throw error;
       }
-      
+
       // if not NotFoundError, means current noteID is exist BUT userID who trying
-      // to access it was NOT OWNER. 
+      // to access it was NOT OWNER.
       try {
         // so it called verify collaborator in collaborationService
         await this._collaborationService.verifyCollaborator(noteId, userId);
       } catch {
         throw error;
       }
-
     }
   }
 }

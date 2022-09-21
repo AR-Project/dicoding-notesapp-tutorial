@@ -1,4 +1,4 @@
-const ClientError = require("../../exceptions/ClientError");
+const ClientError = require('../../exceptions/ClientError');
 
 class UsersHandler {
   constructor(service, validator) {
@@ -21,19 +21,18 @@ class UsersHandler {
 
       // call service, passing data, expect return: userId
       const userId = await this._service.addUser({
-        username, password, fullname
-      })
+        username, password, fullname,
+      });
 
       const response = h.response({
         status: 'success',
         message: 'User berhasil ditambahkan',
         data: {
           userId,
-        }
-      })
+        },
+      });
       response.code(201);
       return response;
-
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -47,7 +46,7 @@ class UsersHandler {
       // server Error!
       const response = h.response({
         status: 'error',
-        message: 'Maaf, terjadi kegagalan pada server kami.'
+        message: 'Maaf, terjadi kegagalan pada server kami.',
       });
       response.code(500);
       console.error(error);
@@ -63,14 +62,13 @@ class UsersHandler {
       // passing id to user services, expecting returns: user object;
       const user = await this._service.getUserById(id);
 
-      // return user data 
+      // return user data
       return {
         status: 'success',
         data: {
           user,
         },
       };
-
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -121,6 +119,6 @@ class UsersHandler {
       return response;
     }
   }
-};
+}
 
 module.exports = UsersHandler;

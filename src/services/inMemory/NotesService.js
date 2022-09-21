@@ -1,11 +1,12 @@
-const { nanoid } = require("nanoid");
-const InvariantError = require("../../exceptions/InvariantError");
-const NotFoundError = require("../../exceptions/NotFoundError");
+const { nanoid } = require('nanoid');
+const InvariantError = require('../../exceptions/InvariantError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 
 class NotesService {
-  constructor () {
+  constructor() {
     this._notes = [];
   }
+
   // Add new note Method
   addNote({ title, body, tags }) {
     // Initialize metadata for a new Note
@@ -25,7 +26,7 @@ class NotesService {
     const isSuccess = this._notes.filter((note) => note.id === id).length > 0;
 
     if (!isSuccess) {
-      throw new InvariantError('Catatan gagal ditambahkan')
+      throw new InvariantError('Catatan gagal ditambahkan');
     }
 
     return id;
@@ -33,7 +34,7 @@ class NotesService {
 
   // Get all note method
   getNotes() {
-    return this._notes;  
+    return this._notes;
   }
 
   // Get a note using id
@@ -57,7 +58,7 @@ class NotesService {
 
     // If not succedd throw error
     if (index === -1) {
-      throw new NotFoundError('Gagal memperbarui catatan. Id tidak ditemukan')
+      throw new NotFoundError('Gagal memperbarui catatan. Id tidak ditemukan');
     }
 
     // Initialized new date metadata
@@ -69,8 +70,8 @@ class NotesService {
       title, // Overwrite
       tags,
       body,
-      updatedAt
-    }
+      updatedAt,
+    };
   }
 
   // Delete a note using id
@@ -79,8 +80,8 @@ class NotesService {
     const index = this._notes.findIndex((note) => note.id === id);
 
     // Check if the note is exist. If not throw an error
-    if (index === -1){
-      throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan')
+    if (index === -1) {
+      throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
     }
 
     // 'DELETE the note using splice array method

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const mapDBtoModel = ({
   id,
   title,
@@ -11,8 +12,8 @@ const mapDBtoModel = ({
   title,
   body,
   tags,
-  createdAt : created_at,
-  updatedAt : updated_at,
+  createdAt: created_at,
+  updatedAt: updated_at,
   username,
 });
 

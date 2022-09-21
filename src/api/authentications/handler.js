@@ -1,4 +1,4 @@
-const ClientError = require("../../exceptions/ClientError");
+const ClientError = require('../../exceptions/ClientError');
 
 class AuthenticationHandler {
   constructor(authenticationsService, usersService, tokenManager, validator) {
@@ -13,6 +13,7 @@ class AuthenticationHandler {
     this.putAuthenticationHandler = this.putAuthenticationHandler.bind(this);
     this.deleteAuthenticationHandler = this.deleteAuthenticationHandler.bind(this);
   }
+
   async postAuthenticationHandler(request, h) {
     try {
       // validate data only using JOI in Authentication Validation
@@ -27,7 +28,7 @@ class AuthenticationHandler {
       // being catched here
       const id = await this._usersService.verifyUserCredential(username, password);
 
-      // generate new token from Token Manager 
+      // generate new token from Token Manager
       const accessToken = this._tokenManager.generateAccessToken({ id });
       const refreshToken = this._tokenManager.generateRefreshToken({ id });
 
@@ -41,13 +42,11 @@ class AuthenticationHandler {
         data: {
           accessToken,
           refreshToken,
-        }
+        },
       });
 
       response.code(201);
       return response;
-
-
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -69,16 +68,15 @@ class AuthenticationHandler {
     }
   }
 
-  async putAuthenticationHandler (request, h) {
+  async putAuthenticationHandler(request, h) {
     // this function only run via route PUT /authentications,
     // refresh token is long lasting than access token
     // so this function is used for generate NEW ACCESS TOKEN
 
-
     try {
       // validate if refresh token is exist from user using auth validator > Joi schema
       this._validator.validatePutAuthenticationPayload(request.payload);
-      
+
       // get current refresh token
       const { refreshToken } = request.payload;
 
@@ -141,7 +139,7 @@ class AuthenticationHandler {
       return {
         status: 'success',
         message: 'Refresh token berhasil dihapus',
-      }
+      };
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -151,7 +149,7 @@ class AuthenticationHandler {
         response.code(error.statusCode);
         return response;
       }
- 
+
       // Server ERROR!
       const response = h.response({
         status: 'error',
@@ -162,6 +160,6 @@ class AuthenticationHandler {
       return response;
     }
   }
-};
+}
 
 module.exports = AuthenticationHandler;

@@ -1,8 +1,7 @@
 // Handler scope is to validate data, receive respond and returning response
-const ClientError = require("../../exceptions/ClientError");
-// the reason why notes service is not imported here because, NoteService is Object 
+const ClientError = require('../../exceptions/ClientError');
+// the reason why notes service is not imported here because, NoteService is Object
 // being init and used via server.js FIRST,
-
 
 class NotesHandler {
   constructor(service, validator) {
@@ -16,16 +15,18 @@ class NotesHandler {
     this.deleteNoteByIdHandler = this.deleteNoteByIdHandler.bind(this);
   }
 
-  async postNoteHandler (request, h) {
+  async postNoteHandler(request, h) {
     try {
       // Parse incoming payload (payload = body)
       this._validator.validateNotePayload(request.payload);
       const { title = 'untitled', body, tags } = request.payload;
       const { id: credentialId } = request.auth.credentials;
-  
+
       // Pass data to noteService
-      const noteId = await this._service.addNote({ title, body, tags, owner: credentialId });
-  
+      const noteId = await this._service.addNote({
+        title, body, tags, owner: credentialId,
+      });
+
       // Initialized response
       const response = h.response({
         status: 'success',
@@ -34,13 +35,13 @@ class NotesHandler {
           noteId,
         },
       });
-  
+
       // Add more response
       response.code(201);
       return response;
     } catch (error) {
       // User Error
-      if (error instanceof ClientError){
+      if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
           message: error.message,
@@ -57,7 +58,6 @@ class NotesHandler {
       response.code(500);
       console.error(error);
       return response;
-
     }
   }
 
@@ -68,18 +68,17 @@ class NotesHandler {
     const notes = await this._service.getNotes(credentialId);
     // no need to modified respone header because respond code is using
     // default data (TIL 200 is default when you return a response)
-    // other method need response to be 'destructured' before send to user because 
+    // other method need response to be 'destructured' before send to user because
     // response code need to be altered.
     return {
       status: 'success',
       data: {
         notes,
       },
-    }
-
+    };
   }
 
-  async getNoteByIdHandler(request, h){
+  async getNoteByIdHandler(request, h) {
     try {
       // parse incoming parameter (param = url)
       const { id } = request.params;
@@ -101,7 +100,7 @@ class NotesHandler {
       if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
-          message: error.message
+          message: error.message,
         });
         response.code(error.statusCode);
         return response;
@@ -110,13 +109,12 @@ class NotesHandler {
       // fail server errror
       const response = h.response({
         status: 'eror',
-        message: 'Maaf, terjadi kegagalan pada server kami.'
+        message: 'Maaf, terjadi kegagalan pada server kami.',
       });
       response.code(500);
       console.error(error);
       return response;
     }
-
   }
 
   async putNoteByIdHandler(request, h) {
@@ -124,13 +122,13 @@ class NotesHandler {
       this._validator.validateNotePayload(request.payload);
       const { id } = request.params;
       const { id: credentialId } = request.auth.credentials;
-    
-      await this._service.verifyNoteAccess(id, credentialId)
+
+      await this._service.verifyNoteAccess(id, credentialId);
       await this._service.editNoteById(id, request.payload);
       return {
         status: 'success',
         message: 'Catatan berhasil diperbarui',
-      }
+      };
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -161,7 +159,7 @@ class NotesHandler {
         status: 'success',
         message: 'Catatan berhasil dihapus',
       };
-    } catch (error){
+    } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
