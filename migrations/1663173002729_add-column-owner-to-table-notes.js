@@ -2,7 +2,7 @@
 
 // exports.shorthands = undefined;
 
-exports.up = pgm => {
+exports.up = (pgm) => {
   pgm.addColumn('notes', {
     owner: {
       type: 'VARCHAR(50)',
@@ -10,6 +10,6 @@ exports.up = pgm => {
   });
 };
 
-exports.down = pgm => {
+exports.down = (pgm) => {
   pgm.dropColumn('notes', 'owner');
 };

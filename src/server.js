@@ -26,6 +26,7 @@ const AuthenticationsValidator = require('./validator/authentications'); // will
 const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
+const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
   // Remember: Object has property/data, function is not.
@@ -69,12 +70,12 @@ const init = async () => {
     }),
   });
 
-  await server.ext('onRequest', (request, h) => {
-    const message = `${request.method} | ${request.path}`;
-    console.log(message);
-    // console.log(h);
-    return h.continue;
-  });
+  // await server.ext('onRequest', (request, h) => {
+  //   const message = `${request.method} | ${request.path}`;
+  //   console.log(message);
+  //   // console.log(h);
+  //   return h.continue;
+  // });
 
   // await server.ext('onPreResponse', (request, h ) => {
   //   const message = `${h.response}`;
@@ -97,7 +98,6 @@ const init = async () => {
         validator: UsersValidator,
       },
     },
-    // this is for the 'route'
     {
       plugin: authentications,
       options: {
@@ -116,6 +116,38 @@ const init = async () => {
       },
     },
   ]);
+
+  server.ext('onPreResponse', (request, h) => {
+    // destructure request object, taking response
+    const { response } = request;
+
+    // catch ALL ERROR in response
+    if (response instanceof Error) {
+      // catch ClientError
+      if (response instanceof ClientError) {
+        const newResponse = h.response({
+          status: 'fail',
+          message: response.message,
+        });
+        newResponse.code(response.statusCode);
+        return newResponse;
+      }
+      // skip error, keep respond continue if it threw by server side.
+      if (!response.isServer) {
+        return h.continue;
+      }
+      // catch error if something wrong with app
+      const newResponse = h.response({
+        status: 'error',
+        message: 'terjadi kegagalan pada server kami',
+      });
+      newResponse.code(500);
+      return newResponse;
+    }
+
+    // if response not an error
+    return h.continue;
+  });
 
   await server.start();
   console.log(`Server berjalan pada ${server.info.uri}`);
