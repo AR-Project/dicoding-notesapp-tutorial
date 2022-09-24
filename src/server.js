@@ -28,6 +28,11 @@ const CollaborationsService = require('./services/postgres/CollaborationsService
 const CollaborationsValidator = require('./validator/collaborations');
 const ClientError = require('./exceptions/ClientError');
 
+// Exports
+const _exports = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
 const init = async () => {
   // Remember: Object has property/data, function is not.
   // So Object need to initialized first
@@ -70,19 +75,6 @@ const init = async () => {
     }),
   });
 
-  // await server.ext('onRequest', (request, h) => {
-  //   const message = `${request.method} | ${request.path}`;
-  //   console.log(message);
-  //   // console.log(h);
-  //   return h.continue;
-  // });
-
-  // await server.ext('onPreResponse', (request, h ) => {
-  //   const message = `${h.response}`;
-  //   console.log(message + '\n')
-  //   return h.continue;
-  // })
-
   await server.register([
     {
       plugin: notes,
@@ -113,6 +105,13 @@ const init = async () => {
         collaborationsService,
         notesService,
         validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        service: ProducerService,
+        validator: ExportsValidator,
       },
     },
   ]);
