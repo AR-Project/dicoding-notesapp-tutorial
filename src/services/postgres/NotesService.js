@@ -6,9 +6,10 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const { mapDBtoModel } = require('../utils');
 
 class NotesService {
-  constructor(collaborationService) { // refer to server.js, collaborationService came from there
+  constructor(collaborationService, cacheService) { // refer to server.js plugin opt
     this._pool = new Pool();
     this._collaborationService = collaborationService;
+    this._cacheService = cacheService;
   }
 
   async addNote({
@@ -33,25 +34,38 @@ class NotesService {
       throw new InvariantError('Catatan gagal ditambahkan');
     }
 
+    await this._cacheService.delete(`notes:${owner}`);
+
     // return id
     return result.rows[0].id;
   }
 
   async getNotes(owner) {
-    // prep query
-    const query = {
-      text: `SELECT notes.* FROM notes
-      LEFT JOIN collaborations ON collaborations.note_id = notes.id
-      WHERE notes.owner = $1 OR collaborations.user_id = $1
-      GROUP BY notes.id`,
-      values: [owner],
-    };
+    try {
+      const result = await this._cacheService.get(`notes:${owner}`);
+      return JSON.parse(result);
+    } catch (error) {
+      // prep query
+      const query = {
+        text: `SELECT notes.* FROM notes
+        LEFT JOIN collaborations ON collaborations.note_id = notes.id
+        WHERE notes.owner = $1 OR collaborations.user_id = $1
+        GROUP BY notes.id`,
+        values: [owner],
+      };
 
-    // fetch data from db
-    const result = await this._pool.query(query);
+      // fetch data from db
+      const result = await this._pool.query(query);
 
-    // return data from result
-    return result.rows.map(mapDBtoModel);
+      // return data from result
+      // return result.rows.map(mapDBtoModel);
+      const mappedResult = result.rows.map(mapDBtoModel);
+
+      // catatan akan disimpan pada cache sebelum fungsi getNotes dikembalikan
+      await this._cacheService.set(`notes:${owner}`, JSON.stringify(mappedResult));
+
+      return mappedResult;
+    }
   }
 
   async getNoteById(id) {
@@ -94,6 +108,9 @@ class NotesService {
     if (!result.rows.length) {
       throw new NotFoundError('Gagal memperbarui catatan. Id tidak ditemukan');
     }
+
+    const { owner } = result.rows[0];
+    await this._cacheService.delete(`notes:${owner}`);
   }
 
   async deleteNoteById(id) {
@@ -110,6 +127,9 @@ class NotesService {
     if (!result.rows.length) {
       throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
     }
+
+    const { owner } = result.rows[0];
+    await this._cacheService.delete(`notes:${owner}`);
   }
 
   async verifyNoteOwner(id, owner) {
